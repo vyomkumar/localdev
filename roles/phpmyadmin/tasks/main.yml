@@ -1,0 +1,14 @@
+- name: Install packages - OS
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - phpmyadmin
+  become: yes
+
+- name: Allow remote access
+  copy:
+    src: phpMyAdmin.conf
+    dest: /etc/httpd/conf.d/phpMyAdmin.conf
+  notify: restart apache
+  become: yes

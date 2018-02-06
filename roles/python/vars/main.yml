@@ -1,0 +1,4 @@
+py2dir: "{{ homedir }}/python2"
+py3dir: "{{ homedir }}/python3"
+py2vedir: "{{ py2dir }}/py2"
+py3vedir: "{{ py3dir }}/py3"

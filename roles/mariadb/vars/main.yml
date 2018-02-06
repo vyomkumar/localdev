@@ -1,0 +1,9 @@
+mariadb_root_password: rootpass
+
+Packages:
+  Mariadb:
+    CentOS:
+    Ubuntu:
+  Python_MySQL:
+    CentOS: MySQL-python
+    Ubuntu: python-mysqldb

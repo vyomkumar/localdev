@@ -1,0 +1,59 @@
+- name: Install packages - OS
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - "{{ Packages['Python_MySQL'][ansible_distribution] }}"
+  - mariadb-server
+  become: yes
+
+- name: Start and enable services
+  systemd:
+    state: started
+    enabled: yes
+    name: "{{ item }}"
+  with_items:
+  - mariadb
+  become: yes
+
+- name: Set root password
+  mysql_user:
+    name: root
+    password: "{{ mariadb_root_password }}"
+    priv: '*.*:ALL'
+    state: present
+    check_implicit_admin: true
+
+# Necessary to make setting the root password idempotent
+- name: Save root credentials in .my.cnf
+  ini_file:
+    dest: "{{ homedir }}/.my.cnf"
+    mode: 0600
+    section: client
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  with_items:
+  - option: user
+    value: root
+  - option: password
+    value: "{{ mariadb_root_password }}"
+
+- name: Remove all anonymous user accounts
+  mysql_user:
+    login_user: root
+    login_password: "{{ mariadb_root_password }}"
+    name: ''
+    host_all: yes
+    state: absent
+
+- name: Disallow root login remotely
+  command: 'mysql -e "{{ item }}"'
+  with_items:
+  - DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1')
+
+- name: Remove test database
+  mysql_db:
+    login_user: root
+    login_password: "{{ mariadb_root_password }}"
+    db: test
+    state: absent

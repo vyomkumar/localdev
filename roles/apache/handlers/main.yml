@@ -1,0 +1,11 @@
+- name: restart apache
+  systemd:
+    state: restarted
+    name: "{{ Packages['Apache'][ansible_distribution] }}"
+  become: yes
+
+- name: restart firewalld
+  systemd:
+    state: restarted
+    name: firewalld
+  become: yes

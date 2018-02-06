@@ -1,0 +1,3 @@
+localuser: vagrant
+homedir: /home/{{ localuser }}
+sharedir: /{{ localuser }}

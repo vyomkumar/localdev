@@ -1,0 +1,21 @@
+DocumentRoot: "{{ sharedir }}/html"
+
+Packages:
+  Apache:
+    CentOS: httpd
+    Ubuntu: apache2
+
+
+Services:
+  Apache:
+    CentOS:
+    Ubuntu:
+  Firewall:
+    CentOS:
+    Ubuntu:
+
+
+Paths:
+  ApacheConfig:
+    CentOS: /etc/httpd/conf/httpd.conf
+    Ubuntu:

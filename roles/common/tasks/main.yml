@@ -1,0 +1,79 @@
+- name: Include all files in vars
+  include_vars:
+    dir: '../vars/'
+
+- name: Install packages - OS
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - "{{ Packages['Python3'][ansible_distribution] }}"
+  - "{{ Packages['Python3_pip'][ansible_distribution] }}"
+  - "{{ Packages['Python3_virtualenv'][ansible_distribution] }}"
+  - "{{ Packages['Python2_pip'][ansible_distribution] }}"
+  - "{{ Packages['Perl_Digest_SHA'][ansible_distribution] }}"
+  - vim
+  - jq
+  - tree
+  - git
+  - mlocate
+  - wget
+  become: yes
+
+- name: System Python - Upgrade pip
+  pip:
+    name: pip
+    extra_args: --upgrade
+    executable: "{{ item }}"
+  with_items:
+  - pip2
+  - pip3
+  become: yes
+
+- name: System Python - Enable columns in pip list output
+  ini_file:
+    dest: "{{ homedir }}/.config/pip/pip.conf"
+    section: list
+    option: --format
+    value: columns
+  become: yes
+
+- name: Global git config
+  git_config:
+    scope: global
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+  with_items:
+  - key: user.name
+    value: "{{ git_user }}"
+  - key: user.email
+    value: "{{ git_email }}"
+  - key: format.pretty
+    value: format:%C(yellow)%h %C(cyan)%>(22,trunc)%cr %C(green)%<(15,trunc)%aN %C(reset)%s %C(red)%d
+
+- name: Download Git prompt customization script
+  get_url:
+    url: https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh
+    dest: "{{ homedir }}/.git-prompt.sh"
+    mode: 0755
+
+- name: Configure Bash profile
+  blockinfile:
+    path: "{{ homedir }}/.bash_profile"
+    create: yes
+    insertafter: EOF
+    block: |
+      GIT_PS1_SHOWDIRTYSTATE=1
+      GIT_PS1_SHOWSTASHSTATE=1
+      GIT_PS1_SHOWUNTRACKEDFILES=1
+      GIT_PS1_SHOWUPSTREAM="auto"
+      export CLICOLOR=1
+      export LSCOLORS=gxBxhxDxfxhxhxhxhxcxcx
+      source ~/.git-prompt.sh
+      PS1='\[\033[32m\]\u@\h\[\033[00m\]:\[\e[0;33m\]\W\[\033[1;31m\]$(__git_ps1)\[\033[00m\]\$ '
+      source `which activate.sh`
+
+- name: Change file permissions - private key
+  file:
+    path: "{{ homedir }}/.ssh/id_rsa"
+    mode: 0600

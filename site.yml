@@ -1,0 +1,12 @@
+#!/usr/bin/env ansible-playbook
+
+- hosts: localhost
+  connection: local
+
+  roles:
+  - common
+  - python
+  - apache
+  - php
+  - mariadb
+  - phpmyadmin

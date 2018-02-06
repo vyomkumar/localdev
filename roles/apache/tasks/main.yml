@@ -1,0 +1,63 @@
+- name: Install Apache
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - "{{ Packages['Apache'][ansible_distribution] }}"
+  become: yes
+
+- name: Create document root
+  file:
+    path: "{{ DocumentRoot }}"
+    state: directory
+
+- name: Disable sendfile
+  lineinfile:
+    path: "{{ Paths['ApacheConfig'][ansible_distribution] }}"
+    regexp: 'EnableSendfile on'
+    line: 'EnableSendfile off'
+  become: yes
+
+- name: Start and enable services
+  systemd:
+    state: started
+    enabled: yes
+    name: "{{ item }}"
+  with_items:
+  - httpd
+  - firewalld
+  become: yes
+
+- name: Allow traffic through firewall
+  firewalld:
+    immediate: true
+    permanent: true
+    state: enabled
+    service: "{{ item }}"
+  with_items:
+  - http
+  - https
+  become: yes
+  notify:
+  - restart apache
+  - restart firewalld
+
+
+
+#- name: Delete default document root
+#  file:
+#    path: /var/www/html
+#    state: absent
+#  become: yes
+
+#- name: Make document root point to the shared folder
+#  file:
+#    src: "{{ DocumentRoot }}"
+#    dest: /var/www/html
+#    state: link
+
+## Create Document root in shared folder
+#if ! [ -L /var/www/html ]; then
+#  rm -rf /var/www/html
+#  ln -fs /vagrant/html /var/www/html
+#fi

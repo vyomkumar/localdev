@@ -1,0 +1,46 @@
+- name: Enable remi-php72 repository
+  yum_repository:
+    name: remi-php72
+    description: Safe Remi's RPM repository for Enterprise Linux {{ ansible_distribution_major_version }} - x86_64
+    mirrorlist: http://cdn.remirepo.net/enterprise/{{ ansible_distribution_major_version }}/safe/mirror
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: http://rpms.remirepo.net/RPM-GPG-KEY-remi
+  become: yes
+  when: ansible_distribution == "CentOS"
+
+- name: Install packages - OS
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - php
+  - php-mysqlnd
+  become: yes
+
+- name: Download Composer
+  get_url:
+    url: https://getcomposer.org/installer
+    dest: /tmp/installer
+
+- name: install composer
+  shell: php /tmp/installer --install-dir=/usr/local/bin --filename=composer
+  args:
+    creates: /usr/local/bin/composer
+  become: yes
+
+- name: Increase PHP memory limit
+  ini_file:
+    path: /etc/php.ini
+    section: PHP
+    option: memory_limit
+    value: 256M
+  become: yes
+
+- name: Git - Checkout "PHP" repository
+  git:
+    repo: "{{ git_repo_php }}"
+    dest: "{{ DocumentRoot }}"
+    clone: yes
+    accept_hostkey: yes
+  when: {{ git_repo_php }} is defined
